@@ -3,15 +3,13 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import {API_URL, IMAGE_URL, deviceWidth} from './constants';
-import {getColors} from 'react-native-image-colors';
+import {API_URL, IMAGE_URL} from './constants';
+import ListItem from './components/ListItem';
 
 const numColumns = 2;
-const itemWidth = deviceWidth / numColumns;
 
 interface Pokemon {
   name: string;
@@ -35,10 +33,10 @@ const App: React.FC = () => {
     const pokemonData = await Promise.all(
       results.map(async (pokemon: {name: string; url: string}) => {
         const index = pokemon.url.split('/').slice(-2, -1)[0];
-        const image = `${IMAGE_URL}/${index}.png`;
+        const imagePath = `${IMAGE_URL}/${index}.png`;
         return {
           name: pokemon.name,
-          image,
+          image: imagePath,
         };
       }),
     );
@@ -47,93 +45,64 @@ const App: React.FC = () => {
     setPage(prevPage => prevPage + 1);
   };
 
-  const renderItem = async ({item}: {item: Pokemon}) => (
-    <View
-      style={[
-        styles.item,
-        {
-          backgroundColor: '#000',
-        },
-      ]}>
-      <Image source={{uri: item.image}} style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
-    </View>
-  );
+  const renderItem = ({item}: {item: Pokemon}) => {
+    return <ListItem item={item} />;
+  };
 
   const renderFooter = () => {
     if (!loading) return null;
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  };
-
-  const renderHeader = () => {
-    return (
-      <View style={styles.headerContainer}>
-        <Text>Pokedex</Text>
+        <ActivityIndicator size="large" color="#fff" />
       </View>
     );
   };
 
   const keyExtractor = (_: any, index: number) => index.toString();
 
-  const getImageColor = (item: Pokemon) => {
-    return getColors(item.image, {
-      fallback: '#228B22',
-      cache: true,
-      key: item.image,
-    }).then(colors => {
-      // console.log('colors', colors);
-      return colors.vibrant;
-    });
-    // return '#000000';
-  };
-
   const onEndReached = () => {
     loadPokemonList();
   };
 
   return (
-    <FlatList
-      data={pokemonList}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      numColumns={numColumns}
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={renderFooter}
-      ListHeaderComponent={renderHeader}
-    />
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.header}>Pokédex</Text>
+      </View>
+
+      <FlatList
+        data={pokemonList}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        numColumns={numColumns}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+        style={styles.listStyle}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  item: {
+  container: {
     flex: 1,
-    margin: 8,
-    borderRadius: 8,
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  image: {
-    width: itemWidth - 16,
-    height: itemWidth - 16,
-    resizeMode: 'contain',
+  headerContainer: {
+    paddingHorizontal: 20,
+    backgroundColor: '#c54549',
   },
-  name: {
-    marginTop: 8,
+  header: {
+    fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginVertical: 16,
+    color: '#fff',
   },
   loadingContainer: {
     paddingVertical: 20,
   },
-  headerContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  listStyle: {
+    backgroundColor: '#2a282a',
   },
 });
 
